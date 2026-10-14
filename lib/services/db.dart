@@ -30,10 +30,7 @@ class Db {
   }
 
   Future<void> switchToShop(String uid, String name) async {
-    await _users.doc(uid).update({
-      'displayName': name,
-      'role': 'shop',
-    });
+    await _users.doc(uid).update({'displayName': name, 'role': 'shop'});
   }
 
   // เลือกบทบาทร้านค้า พร้อมสร้างเอกสารร้านให้ในคราวเดียว
@@ -72,6 +69,15 @@ class Db {
     });
   }
 
+  Future<void> setShopCover(String shopId, String imageBase64) async {
+    await _shops.doc(shopId).update({
+      'coverImageBase64': imageBase64,
+      'coverImageUrl': FieldValue.delete(),
+      'coverImagePath': FieldValue.delete(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   // รายชื่อร้านทั้งหมด ลูกค้าเห็นทุกร้านแต่กดสั่งได้เฉพาะร้านที่เปิด
   Stream<List<Shop>> watchShops() => _shops
       .orderBy('name')
@@ -83,6 +89,7 @@ class Db {
       .orderBy('name')
       .snapshots()
       .map((s) => s.docs.map(MenuItem.fromDoc).toList());
+
   /// CREATE เพิ่มเมนู พร้อมรูป (ถ้ามี)
   Future<void> addMenuItem(
     String shopId,
@@ -170,7 +177,7 @@ class Db {
       .orderBy('createdAt')
       .snapshots()
       .map((s) => s.docs.map(FoodOrder.fromDoc).toList());
-    Stream<List<FoodOrder>> watchCompletedShopOrders(String shopId) => _orders
+  Stream<List<FoodOrder>> watchCompletedShopOrders(String shopId) => _orders
       .where('shopId', isEqualTo: shopId)
       .where('status', isEqualTo: OrderStatus.completed)
       .snapshots()

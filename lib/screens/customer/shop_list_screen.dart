@@ -6,6 +6,7 @@ import '../../models/shop.dart';
 import '../../services/auth_service.dart';
 import '../../services/db.dart';
 import '../widgets/menu_image.dart';
+import '../widgets/shop_cover.dart';
 import 'menu_screen.dart';
 import 'my_orders_screen.dart';
 import 'order_track_screen.dart';
@@ -133,6 +134,7 @@ class ShopListScreen extends StatelessWidget {
               const SizedBox(height: 12),
               for (final shop in shops) ...[
                 Card(
+                  clipBehavior: Clip.antiAlias,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(18),
                     onTap: () => Navigator.push(
@@ -141,69 +143,73 @@ class ShopListScreen extends StatelessWidget {
                         builder: (_) => MenuScreen(shop: shop, user: user),
                       ),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 28,
-                            backgroundColor: shop.isOpen
-                                ? Theme.of(context).colorScheme.primaryContainer
-                                : Colors.grey.shade200,
-                            child: Icon(
-                              Icons.storefront_rounded,
-                              color: shop.isOpen
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  shop.name,
-                                  style: Theme.of(context).textTheme.titleMedium
-                                      ?.copyWith(fontWeight: FontWeight.w700),
-                                ),
-                                const SizedBox(height: 5),
-                                Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ShopCover(
+                          imageBase64: shop.coverImageBase64,
+                          imageUrl: shop.coverImageUrl,
+                          height: 150,
+                          isClosed: !shop.isOpen,
+                          borderRadius: BorderRadius.zero,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: BoxDecoration(
-                                        color: shop.isOpen
-                                            ? const Color(0xFF16A36A)
-                                            : Colors.grey,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
                                     Text(
-                                      shop.isOpen
-                                          ? 'เปิดรับออร์เดอร์'
-                                          : 'ปิดร้าน',
-                                      style: TextStyle(
-                                        color: shop.isOpen
-                                            ? const Color(0xFF168354)
-                                            : Colors.grey.shade600,
-                                        fontSize: 13,
-                                      ),
+                                      shop.name,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          width: 8,
+                                          height: 8,
+                                          decoration: BoxDecoration(
+                                            color: shop.isOpen
+                                                ? const Color(0xFF16A36A)
+                                                : const Color(0xFFD93636),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          shop.isOpen
+                                              ? 'เปิดรับออร์เดอร์'
+                                              : 'ปิดอยู่',
+                                          style: TextStyle(
+                                            color: shop.isOpen
+                                                ? const Color(0xFF168354)
+                                                : const Color(0xFFD93636),
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
+                              ),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 16,
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
+                            ],
                           ),
-                          Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 16,
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -268,8 +274,9 @@ class ShopListScreen extends StatelessWidget {
                           const SizedBox(width: 12),
                         ] else ...[
                           CircleAvatar(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.primaryContainer,
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primaryContainer,
                             child: Icon(
                               Icons.receipt_long_rounded,
                               color: Theme.of(context).colorScheme.primary,
@@ -308,8 +315,7 @@ class ShopListScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              OrderStatus.labels[order.status] ??
-                                  order.status,
+                              OrderStatus.labels[order.status] ?? order.status,
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.primary,
                                 fontSize: 12,

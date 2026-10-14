@@ -42,7 +42,8 @@ class StorageService {
     try {
       await _storage.ref(path).delete();
     } on FirebaseException catch (error) {
-      if (error.code != 'object-not-found') rethrow;
+      final code = error.code.split('/').last;
+      if (code != 'object-not-found') rethrow;
     }
   }
 }

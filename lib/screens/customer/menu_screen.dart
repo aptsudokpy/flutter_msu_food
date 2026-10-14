@@ -8,6 +8,7 @@ import '../../models/shop.dart';
 import '../../services/db.dart';
 import 'order_track_screen.dart';
 import '../widgets/menu_image.dart';
+import '../widgets/shop_cover.dart';
 
 /// หน้าเมนูและตะกร้าของลูกค้า
 ///
@@ -103,7 +104,8 @@ class _MenuScreenState extends State<MenuScreen> {
       body: StreamBuilder<Shop>(
         stream: _db.watchShop(widget.shop.id),
         builder: (context, shopSnap) {
-          final isOpen = shopSnap.data?.isOpen ?? false;
+          final shop = shopSnap.data ?? widget.shop;
+          final isOpen = shop.isOpen;
           return Column(
             children: [
               if (!isOpen)
@@ -142,10 +144,18 @@ class _MenuScreenState extends State<MenuScreen> {
                     _menu = menuSnap.data!;
                     return ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
-                      itemCount: _menu.length + 1,
+                      itemCount: _menu.length + 2,
                       separatorBuilder: (_, _) => const SizedBox(height: 10),
                       itemBuilder: (context, i) {
                         if (i == 0) {
+                          return ShopCover(
+                            imageBase64: shop.coverImageBase64,
+                            imageUrl: shop.coverImageUrl,
+                            height: 190,
+                            isClosed: !isOpen,
+                          );
+                        }
+                        if (i == 1) {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 4),
                             child: Row(
@@ -156,9 +166,7 @@ class _MenuScreenState extends State<MenuScreen> {
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleLarge
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w800,
-                                        ),
+                                        ?.copyWith(fontWeight: FontWeight.w800),
                                   ),
                                 ),
                                 Text(
@@ -173,7 +181,7 @@ class _MenuScreenState extends State<MenuScreen> {
                             ),
                           );
                         }
-                        final m = _menu[i - 1];
+                        final m = _menu[i - 2];
                         final qty = _cart[m.id] ?? 0;
                         final canOrder = isOpen && m.available;
                         return Card(
@@ -225,9 +233,7 @@ class _MenuScreenState extends State<MenuScreen> {
                                       : 'หมดชั่วคราว',
                                   style: TextStyle(
                                     color: m.available
-                                        ? Theme.of(
-                                            context,
-                                          ).colorScheme.primary
+                                        ? Theme.of(context).colorScheme.primary
                                         : Colors.red,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -339,9 +345,7 @@ class _MenuScreenState extends State<MenuScreen> {
                                       strokeWidth: 2,
                                     ),
                                   )
-                                : Text(
-                                    'ยืนยันสั่งซื้อ  ·  รวม $_total บาท',
-                                  ),
+                                : Text('ยืนยันสั่งซื้อ  ·  รวม $_total บาท'),
                           ),
                         ),
                       ],
