@@ -5,6 +5,7 @@ import '../../models/shop.dart';
 import '../../models/food_order.dart';
 import '../../services/auth_service.dart';
 import '../../services/db.dart';
+import '../../services/image_service.dart';
 import '../widgets/menu_image.dart';
 import 'menu_manage_screen.dart';
 import 'order_history_screen.dart';
@@ -71,41 +72,75 @@ class OrderBoardScreen extends StatelessWidget {
               return Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                 child: Card(
-                  child: SwitchListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 6,
+                  elevation: 1,
+                  shadowColor: Colors.black.withValues(alpha: 0.06),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outlineVariant.withValues(alpha: 0.5),
                     ),
-                    secondary: CircleAvatar(
-                      backgroundColor: shop.isOpen
-                          ? const Color(0xFFE7F6EF)
-                          : Colors.grey.shade200,
-                      child: Icon(
-                        Icons.storefront_rounded,
-                        color: shop.isOpen
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.grey,
-                      ),
-                    ),
-                    title: Text(
-                      shop.name,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        shop.isOpen
-                            ? 'เปิดรับออร์เดอร์อยู่'
-                            : 'ปิดร้านชั่วคราว',
-                        style: TextStyle(
-                          color: shop.isOpen
-                              ? const Color(0xFF168354)
-                              : Colors.grey.shade600,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
+                    child: Row(
+                      children: [
+                        _ShopCoverThumbnail(shop: shop),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                shop.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w800),
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Icon(
+                                    shop.isOpen
+                                        ? Icons.check_circle_rounded
+                                        : Icons.pause_circle_filled_rounded,
+                                    size: 16,
+                                    color: shop.isOpen
+                                        ? const Color(0xFF168354)
+                                        : const Color(0xFFD93636),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Flexible(
+                                    child: Text(
+                                      shop.isOpen
+                                          ? 'เปิดรับออร์เดอร์อยู่'
+                                          : 'ปิดร้านชั่วคราว',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: shop.isOpen
+                                            ? const Color(0xFF168354)
+                                            : const Color(0xFFD93636),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                        Switch.adaptive(
+                          value: shop.isOpen,
+                          onChanged: (value) => db.setShopOpen(shopId, value),
+                        ),
+                      ],
                     ),
-                    value: shop.isOpen,
-                    onChanged: (v) => db.setShopOpen(shopId, v),
                   ),
                 ),
               );
@@ -170,6 +205,118 @@ class OrderBoardScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ShopCoverThumbnail extends StatelessWidget {
+  final Shop shop;
+
+  const _ShopCoverThumbnail({required this.shop});
+
+  @override
+  Widget build(BuildContext context) {
+    final bytes = ImageService.decode(shop.coverImageBase64);
+    final hasUrl = shop.coverImageUrl != null && shop.coverImageUrl!.isNotEmpty;
+    Widget image;
+    if (bytes != null) {
+      image = Image.memory(bytes, fit: BoxFit.cover, gaplessPlayback: true);
+    } else if (hasUrl) {
+      image = Image.network(
+        shop.coverImageUrl!,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => _placeholder(context),
+      );
+    } else {
+      image = _placeholder(context);
+    }
+
+    if (!shop.isOpen) {
+      image = ColorFiltered(
+        colorFilter: const ColorFilter.matrix(<double>[
+          0.2126,
+          0.7152,
+          0.0722,
+          0,
+          0,
+          0.2126,
+          0.7152,
+          0.0722,
+          0,
+          0,
+          0.2126,
+          0.7152,
+          0.0722,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ]),
+        child: image,
+      );
+    }
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: shop.isOpen
+                  ? const Color(0xFFD9EFE1)
+                  : const Color(0xFFE2E2E2),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: SizedBox.expand(child: image),
+          ),
+        ),
+        Positioned(
+          right: -3,
+          bottom: -3,
+          child: Container(
+            width: 17,
+            height: 17,
+            decoration: BoxDecoration(
+              color: shop.isOpen
+                  ? const Color(0xFF168354)
+                  : const Color(0xFFD93636),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2.5),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _placeholder(BuildContext context) => ColoredBox(
+    color: shop.isOpen
+        ? Theme.of(context).colorScheme.primaryContainer
+        : Colors.grey.shade200,
+    child: Center(
+      child: Icon(
+        Icons.storefront_rounded,
+        size: 28,
+        color: shop.isOpen
+            ? Theme.of(context).colorScheme.primary
+            : Colors.grey.shade600,
+      ),
+    ),
+  );
 }
 
 class _OrderCard extends StatelessWidget {

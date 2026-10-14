@@ -27,7 +27,7 @@ class ShopCover extends StatelessWidget {
             bytes,
             width: double.infinity,
             height: height,
-            fit: BoxFit.cover,
+            fit: BoxFit.contain,
             gaplessPlayback: true,
           )
         : hasUrl
@@ -35,7 +35,7 @@ class ShopCover extends StatelessWidget {
             imageUrl!,
             width: double.infinity,
             height: height,
-            fit: BoxFit.cover,
+            fit: BoxFit.contain,
             errorBuilder: (_, _, _) => _placeholder(context),
           )
         : _placeholder(context);
